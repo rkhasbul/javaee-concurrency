@@ -44,10 +44,11 @@ public class ReportingService {
     @POST
     @Path("/schedule")
     public Response schedule(final @QueryParam("reportType") ReportType reportType) {
-    	logger.info("Scheduling report generation...");
+    	logger.info(String.format("Scheduling %s report task...", reportType.getLabel()));
         try {
-        	ScheduledFuture<?> scheduledTask = reportingExecutor.schedule(
-        			ReportTaskFactory.getTask(reportType), 30, TimeUnit.SECONDS);
+        	final Runnable task = reportingTasks.getTask(reportType);
+        	final ScheduledFuture<?> scheduledTask = reportingExecutor.schedule(
+        			task, 30, TimeUnit.SECONDS);
         	reportingTasks.put(reportType, scheduledTask);
         } catch (RejectedExecutionException ree) {
             return Response
@@ -75,7 +76,7 @@ public class ReportingService {
     @DELETE
     @Path("/cancel/{scheduledTask}")
     public Response cancel(final @PathParam("scheduledTask") String scheduledTask) {
-    	logger.info(String.format("Cancelling '%s' scheduled tasks...", scheduledTask));
+    	logger.info(String.format("Cancelling '%s' scheduled task...", scheduledTask));
     	reportingTasks.deleteTask(scheduledTask);
     	return Response
     			.status(OK)

@@ -50,7 +50,7 @@
             <br/>
             <h:panelGrid id="cancelpanel" columns="1">
                 <h:outputText value="Cancel report task(s):"/>
-                <h:selectOneListbox size="5" value="#{reportingClient.scheduledTask}" >
+                <h:selectOneListbox size="5" value="#{reportingClient.scheduledTask}" class="tasks">
                     <f:selectItems value="#{reportingClient.scheduledTasks}"/>
                 </h:selectOneListbox>
                 <h:commandButton value="Cancel Task" actionListener="#{reportingClient.cancelTask()}">

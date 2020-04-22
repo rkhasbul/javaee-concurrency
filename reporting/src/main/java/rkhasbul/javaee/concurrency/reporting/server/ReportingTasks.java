@@ -53,4 +53,13 @@ public class ReportingTasks {
     	return String.join(",", tasks.keySet());
     }
     
+    @Lock(LockType.READ)
+    public Runnable getTask(final ReportType reportType) {
+		switch (reportType) {
+			case VAR: return new VarReportTask();
+			case MARGIN: return new MarginReportTask();
+			default: throw new UnsupportedOperationException();
+		}
+	}
+    
 }

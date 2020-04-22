@@ -37,9 +37,9 @@ public class VarCalculator {
     private VarStorage varStorage;
     
     @GET
-    @Path("/calculate")
-    public Response calculate(final @PathParam("ticker") String ticker) {
-    	logger.info("Calculating VaR for '%s' ticker...");
+    @Path("/submit")
+    public Response submit(final @PathParam("ticker") String ticker) {
+    	logger.info(String.format("Submitting VaR calculation task for ticker '%s'...", ticker));
         try {
             Future<Integer> submit = varExecutor.submit(new VarTask(ticker));
             varStorage.put(ticker, submit);

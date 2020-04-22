@@ -23,9 +23,9 @@ public class VarTask implements Callable<Integer> {
 	@Override
     public Integer call() {
         try {
-            logger.info(String.format("Starting VaR Calculation Task for tiker '%s'...", ticker));
+            logger.info(String.format("Calculating VaR for ticker '%s'...", ticker));
             Thread.sleep(5000);
-            logger.info(String.format("VaR Calculation Task or ticker '%s' has been completed", ticker));
+            logger.info(String.format("VaR calculation for ticker '%s' has been completed", ticker));
             return ThreadLocalRandom.current().nextInt();
         } catch (Exception e) {
             logger.severe(e.getMessage());
