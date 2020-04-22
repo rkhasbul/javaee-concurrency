@@ -1,9 +1,5 @@
 package rkhasbul.javaee.concurrency.reporting.server;
 
-import javax.ejb.ConcurrencyManagement;
-import javax.ejb.ConcurrencyManagementType;
-import javax.ejb.Singleton;
-
 import rkhasbul.javaee.concurrency.reporting.client.ReportType;
 
 /**
@@ -13,11 +9,11 @@ import rkhasbul.javaee.concurrency.reporting.client.ReportType;
  * @version 1.0
  *
  */
-@Singleton
-@ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
-public class ReportTaskFactory {
+public final class ReportTaskFactory {
 
-	public Runnable getTask(final ReportType reportType) {
+	private ReportTaskFactory() {}
+	
+	public static Runnable getTask(final ReportType reportType) {
 		switch (reportType) {
 			case VAR: return new VarReportTask();
 			case MARGIN: return new MarginReportTask();

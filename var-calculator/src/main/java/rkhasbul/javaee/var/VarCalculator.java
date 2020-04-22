@@ -31,7 +31,7 @@ public class VarCalculator {
 	private static final Logger logger = Logger.getLogger(VarCalculator.class.getCanonicalName());
 
     @Resource(lookup = "java:jboss/ee/concurrency/executor/var")
-    private ManagedExecutorService varExecutorService;
+    private ManagedExecutorService varExecutor;
 
     @EJB
     private VarStorage varStorage;
@@ -41,7 +41,7 @@ public class VarCalculator {
     public Response calculate(final @PathParam("ticker") String ticker) {
     	logger.info("Calculating VaR for '%s' ticker...");
         try {
-            Future<Integer> submit = varExecutorService.submit(new VarTask(ticker));
+            Future<Integer> submit = varExecutor.submit(new VarTask(ticker));
             varStorage.put(ticker, submit);
         } catch (RejectedExecutionException ree) {
             return Response.status(SERVICE_UNAVAILABLE)
@@ -70,7 +70,6 @@ public class VarCalculator {
     	} else {
     		responseBuilder = Response.status(NOT_FOUND);
     	}
-    	logger.info(String.format("VaR result for '%s' requested", ticker));
 		return responseBuilder.build();
     }
     

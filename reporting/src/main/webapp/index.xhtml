@@ -23,7 +23,7 @@
     </h:head>
     <h:body>
         <h:form>
-            <h1>Generate Report</h1>
+            <h1>Reporting Generation</h1>
             
             <h:panelGrid columns="1">
 
@@ -32,10 +32,31 @@
                                    itemValue="#{item}" itemLabel="#{item.label}" />
                 </h:selectOneMenu>
 
-                <h:commandButton action="#{reportingClient.submit()}" value="Launch" />
+                <h:commandButton action="#{reportingClient.submit()}" value="Schedule">
+                	<f:ajax execute="@form" render="cancelform"/>
+                </h:commandButton>
 
             </h:panelGrid>
             <h:messages class="message"/>
+        </h:form>
+        <br/>
+        <br/>
+        <h:form id="cancelform">
+        	<h1>Reporting Generation Tasks</h1>
+        
+            <h:commandButton id="refreshlist" value="Refresh" style="display:none">
+                <f:ajax execute="refreshlist" render="cancelpanel"/>
+            </h:commandButton>
+            <br/>
+            <h:panelGrid id="cancelpanel" columns="1">
+                <h:outputText value="Cancel report task(s):"/>
+                <h:selectOneListbox size="5" value="#{reportingClient.scheduledTask}" >
+                    <f:selectItems value="#{reportingClient.scheduledTasks}"/>
+                </h:selectOneListbox>
+                <h:commandButton value="Cancel Task" actionListener="#{reportingClient.cancelTask()}">
+                    <f:ajax execute="@form" render="@form"/>
+                </h:commandButton>
+            </h:panelGrid>
         </h:form>
     </h:body>
 </html>

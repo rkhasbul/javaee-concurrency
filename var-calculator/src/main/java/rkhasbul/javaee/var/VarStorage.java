@@ -11,7 +11,7 @@ import javax.ejb.LockType;
 import javax.ejb.Singleton;
 
 /**
- * 
+ * Storage for VaR tasks
  * 
  * @author Ruslan Khasbulatov
  * @version 1.0

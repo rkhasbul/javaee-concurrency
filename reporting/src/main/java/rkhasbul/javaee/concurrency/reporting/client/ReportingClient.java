@@ -1,6 +1,8 @@
 package rkhasbul.javaee.concurrency.reporting.client;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
@@ -9,7 +11,12 @@ import javax.faces.context.FacesContext;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import rkhasbul.javaee.concurrency.reporting.server.ReportTasksType;
 
 /**
  * Reporting UI bean
@@ -28,28 +35,38 @@ public class ReportingClient implements Serializable {
 
 	private static final Logger logger = Logger.getLogger(ReportingClient.class.getCanonicalName());
 	
-	private static final String serviceEndpoint = "http://localhost:8080/reporting/rest/reporting-service/process";
+	private static final String serviceEndpoint = "http://localhost:8080/reporting/rest/report";
 
+	private final Client client = ClientBuilder.newClient();
+	
 	private ReportType reportType;
 	
+	private String scheduledTask;
+	
     public String submit() {
-        final Client client = ClientBuilder.newClient();
+        final Response response = client.target(serviceEndpoint + "/schedule")
+        		.queryParam("reportType", reportType)
+        		.request().post(null);
+        handleResponse(response);
+        return "";
+    }
 
-        final Response response = client.target(serviceEndpoint)
-                .queryParam("reportType", reportType)
-                .request()
-                .post(null);
-
-        final String responseMessage = response.readEntity(String.class);
+    public String cancelTask() {
+    	final Response response = client.target(serviceEndpoint + "/cancel/" + scheduledTask).request().delete();
+    	handleResponse(response);
+        return "";
+    }
+    
+    private void handleResponse(Response response) {
+    	final String responseMessage = response.readEntity(String.class);
         final FacesMessage message = (response.getStatus() == 200)
                 ? new FacesMessage(FacesMessage.SEVERITY_INFO, null, null)
                 : new FacesMessage(FacesMessage.SEVERITY_ERROR, null, null);
         message.setSummary(responseMessage);                 
         FacesContext.getCurrentInstance().addMessage(null, message);
         logger.info(message.getSummary());
-        return "";
     }
-
+    
 	public ReportType getReportType() {
 		return reportType;
 	}
@@ -63,5 +80,20 @@ public class ReportingClient implements Serializable {
 	}
 	
 	public void setReportTypes(ReportType[] reportTypes) { }
+	
+	public String getScheduledTask() {
+		return scheduledTask;
+	}
+
+	public void setScheduledTask(String scheduledTask) {
+		this.scheduledTask = scheduledTask;
+	}
+	
+	public String[] getScheduledTasks() {
+		Response response = client.target(serviceEndpoint + "/tasks").request().get();
+		return response.readEntity(String.class).split(",");
+	}
+	
+	public void setScheduledTasks(String[] scheduledTasks) { }
 	
 }

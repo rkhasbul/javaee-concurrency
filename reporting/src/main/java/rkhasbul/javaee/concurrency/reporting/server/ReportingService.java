@@ -1,18 +1,31 @@
 package rkhasbul.javaee.concurrency.reporting.server;
 
+import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.enterprise.concurrent.ManagedScheduledExecutorService;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import rkhasbul.javaee.concurrency.reporting.client.ReportType;
+
+import static javax.ws.rs.core.Response.Status.OK;
+import static javax.ws.rs.core.Response.Status.CREATED;
+import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
 
 /**
  * Report Generation Service 
@@ -21,34 +34,56 @@ import rkhasbul.javaee.concurrency.reporting.client.ReportType;
  * @version 1.0
  */
 @Stateless
-@Path("/reporting-service")
+@Path("/report")
 public class ReportingService {
 	
 	private static final Logger logger = Logger.getLogger(ReportingService.class.getCanonicalName());
 
-    @Resource(lookup = "java:jboss/ee/concurrency/executor/reporting")
-    private ManagedExecutorService managedExecutorService;
-
+    @Resource(lookup = "java:jboss/ee/concurrency/scheduler/reporting")
+    private ManagedScheduledExecutorService reportingExecutor;
+    
     @EJB
-    private ReportTaskFactory reportTaskFactory;
+    private ReportingTasks reportingTasks;
 
     @POST
-    @Path("/process")
-    public Response process(final @QueryParam("reportType") ReportType reportType) {
-    	logger.info("Processing report generation...");
+    @Path("/schedule")
+    public Response schedule(final @QueryParam("reportType") ReportType reportType) {
+    	logger.info("Scheduling report generation...");
         try {
-            managedExecutorService.submit(reportTaskFactory.getTask(reportType));
+        	ScheduledFuture<?> scheduledTask = reportingExecutor.schedule(
+        			ReportTaskFactory.getTask(reportType), 30, TimeUnit.SECONDS);
+        	reportingTasks.put(reportType, scheduledTask);
         } catch (RejectedExecutionException ree) {
             return Response
-            		.status(Response.Status.SERVICE_UNAVAILABLE)
-            		.entity(String.format("%s report task not submitted. %s", reportType.getLabel(), ree.getMessage()))
+            		.status(SERVICE_UNAVAILABLE)
+            		.entity(String.format("%s report task not been scheduled. %s", reportType.getLabel(), ree.getMessage()))
             		.build();
         }
 
         return Response
-        		.status(Response.Status.OK)
-        		.entity(String.format("%s report task successfully submitted.", reportType.getLabel()))
+        		.status(CREATED)
+        		.entity(String.format("%s report task successfully scheduled.", reportType.getLabel()))
         		.build();
     }
 
+    @GET
+    @Path("/tasks")
+    public Response tasks() {
+    	logger.info("Providing list of scheduled tasks...");
+		return Response
+				.status(OK)
+				.entity(reportingTasks.getTasks())
+				.build();
+    } 
+    
+    @DELETE
+    @Path("/cancel/{scheduledTask}")
+    public Response cancel(final @PathParam("scheduledTask") String scheduledTask) {
+    	logger.info(String.format("Cancelling '%s' scheduled tasks...", scheduledTask));
+    	reportingTasks.deleteTask(scheduledTask);
+    	return Response
+    			.status(OK)
+    			.build();
+    }
+    
 }
