@@ -1,8 +1,6 @@
 package rkhasbul.javaee.concurrency.reporting.client;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.enterprise.context.RequestScoped;
@@ -11,12 +9,7 @@ import javax.faces.context.FacesContext;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.GenericEntity;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import rkhasbul.javaee.concurrency.reporting.server.ReportTasksType;
 
 /**
  * Reporting UI bean
