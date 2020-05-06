@@ -1,25 +1,21 @@
 package rkhasbul.javaee.concurrency.reporting.server;
 
-import static javax.ws.rs.core.Response.Status.CREATED;
-import static javax.ws.rs.core.Response.Status.OK;
-import static javax.ws.rs.core.Response.Status.SERVICE_UNAVAILABLE;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.ejb.Stateless;
+import javax.ejb.LocalBean;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.enterprise.concurrent.ManagedScheduledExecutorService;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
 
 import rkhasbul.javaee.concurrency.reporting.client.ReportType;
 
@@ -29,8 +25,10 @@ import rkhasbul.javaee.concurrency.reporting.client.ReportType;
  * @author Ruslan Khasbulatov
  * @version 1.0
  */
-@Stateless
-@Path("/report")
+
+@Startup
+@Singleton
+@LocalBean
 public class ReportingService {
 
     private static final Logger logger = Logger.getLogger(ReportingService.class.getCanonicalName());
@@ -38,49 +36,53 @@ public class ReportingService {
     @Resource(lookup = "java:jboss/ee/concurrency/scheduler/reporting")
     private ManagedScheduledExecutorService reportingExecutor;
 
-    @EJB
-    private ReportingTasks reportingTasks;
+    private Map<String, ScheduledFuture<?>> tasks;
 
-    @POST
-    @Path("/schedule")
-    public Response schedule(final @QueryParam("reportType") ReportType reportType) {
+    private AtomicLong counter;
+
+    @PostConstruct
+    public void init() {
+        tasks = new HashMap<>();
+        counter = new AtomicLong();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        logger.info("Cancelling scheduled tasks");
+        for (ScheduledFuture<?> task : tasks.values()) {
+            task.cancel(true);
+        }
+        reportingExecutor.shutdownNow();
+    }
+
+    public boolean schedule(final ReportType reportType) {
         logger.info(String.format("Scheduling %s report task...", reportType.getLabel()));
         try {
-            final Runnable task = reportingTasks.getTask(reportType);
+            final Runnable task = ReportTaskFactory.getTask(reportType);
             final ScheduledFuture<?> scheduledTask = reportingExecutor.schedule(
                     task, 30, TimeUnit.SECONDS);
-            reportingTasks.put(reportType, scheduledTask);
+            tasks.put(reportType.toString() + counter.incrementAndGet(), scheduledTask);
         } catch (RejectedExecutionException ree) {
-            return Response
-                    .status(SERVICE_UNAVAILABLE)
-                    .entity(String.format("%s report task not been scheduled. %s", reportType.getLabel(), ree.getMessage()))
-                    .build();
+            logger.severe(String.format("%s report task not been scheduled. %s", reportType.getLabel(), ree.getMessage()));
+            return false;
         }
-
-        return Response
-                .status(CREATED)
-                .entity(String.format("%s report task successfully scheduled.", reportType.getLabel()))
-                .build();
+        logger.info(String.format("%s report task successfully scheduled.", reportType.getLabel()));
+        return true;
     }
 
-    @GET
-    @Path("/tasks")
-    public Response tasks() {
+    public Set<String> getTasks() {
         logger.info("Providing list of scheduled tasks...");
-        return Response
-                .status(OK)
-                .entity(reportingTasks.getTasks())
-                .build();
+        return tasks.keySet();
     }
 
-    @DELETE
-    @Path("/cancel/{scheduledTask}")
-    public Response cancel(final @PathParam("scheduledTask") String scheduledTask) {
+    public boolean cancel(final String scheduledTask) {
         logger.info(String.format("Cancelling '%s' scheduled task...", scheduledTask));
-        reportingTasks.deleteTask(scheduledTask);
-        return Response
-                .status(OK)
-                .build();
+        if (tasks.containsKey(scheduledTask)) {
+            tasks.get(scheduledTask).cancel(true);
+            tasks.remove(scheduledTask);
+            return true;
+        }
+        return false;
     }
 
 }

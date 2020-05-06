@@ -1,17 +1,16 @@
 package rkhasbul.javaee.concurrency.reporting.client;
 
 import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.ejb.EJB;
 import javax.enterprise.context.RequestScoped;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 import javax.inject.Named;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Response;
+
+import rkhasbul.javaee.concurrency.reporting.server.ReportingService;
 
 /**
  * Reporting UI bean
@@ -30,43 +29,31 @@ public class ReportingClient implements Serializable {
 
     private static final Logger logger = Logger.getLogger(ReportingClient.class.getCanonicalName());
 
-    private final String serviceEndpoint;
-
-    private final Client client;
+    @EJB
+    private ReportingService service;
 
     private ReportType reportType;
 
     private String scheduledTask;
 
-    public ReportingClient() throws UnknownHostException {
-        client = ClientBuilder.newClient();
-        serviceEndpoint = "http://" + InetAddress.getLocalHost().getHostName() 
-                + "/rest/report";
-        logger.info("serviceEndpoint: " + serviceEndpoint);
-        logger.info("canonical host name: " + 
-                InetAddress.getLocalHost().getCanonicalHostName());
-    }
-
     public String submit() {
-        final Response response = client.target(serviceEndpoint + "/schedule")
-                .queryParam("reportType", reportType)
-                .request().post(null);
-        handleResponse(response);
+        final boolean success = service.schedule(reportType);
+        handleResponse(success);
         return "";
     }
 
     public String cancelTask() {
-        final Response response = client.target(serviceEndpoint + "/cancel/" + scheduledTask).request().delete();
+        final boolean response = service.cancel(scheduledTask);
         handleResponse(response);
         return "";
     }
 
-    private void handleResponse(Response response) {
-        final String responseMessage = response.readEntity(String.class);
-        final FacesMessage message = (response.getStatus() == 200)
-                ? new FacesMessage(FacesMessage.SEVERITY_INFO, null, null)
-                : new FacesMessage(FacesMessage.SEVERITY_ERROR, null, null);
-        message.setSummary(responseMessage);                 
+    private void handleResponse(final boolean success) {
+        final FacesMessage message = success
+                ? new FacesMessage(FacesMessage.SEVERITY_INFO, 
+                        "Request has been processed successfully", null)
+                : new FacesMessage(FacesMessage.SEVERITY_ERROR, 
+                        "Request has been processed with error", null);
         FacesContext.getCurrentInstance().addMessage(null, message);
         logger.info(message.getSummary());
     }
@@ -93,11 +80,10 @@ public class ReportingClient implements Serializable {
         this.scheduledTask = scheduledTask;
     }
 
-    public String[] getScheduledTasks() {
-        Response response = client.target(serviceEndpoint + "/tasks").request().get();
-        return response.readEntity(String.class).split(",");
+    public Set<String> getScheduledTasks() {
+        return service.getTasks();
     }
 
-    public void setScheduledTasks(String[] scheduledTasks) { }
+    public void setScheduledTasks(Set<String> scheduledTasks) { }
 
 }
