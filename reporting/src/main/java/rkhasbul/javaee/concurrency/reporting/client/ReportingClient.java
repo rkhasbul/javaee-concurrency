@@ -41,7 +41,7 @@ public class ReportingClient implements Serializable {
     public ReportingClient() throws UnknownHostException {
         client = ClientBuilder.newClient();
         serviceEndpoint = "http://" + InetAddress.getLocalHost().getHostName() 
-                + "/reporting/rest/report";
+                + "/rest/report";
     }
 
     public String submit() {
