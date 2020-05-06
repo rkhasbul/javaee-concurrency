@@ -41,10 +41,10 @@ private ManagedScheduledExecutorService reportingExecutor;
 The `schedule` method in `ReportingService` uses this executor to submit tasks as follows:
 
 ```java
-final Runnable task = reportingTasks.getTask(reportType);
+final Runnable task = ReportTaskFactory.getTask(reportType);
 final ScheduledFuture<?> scheduledTask = reportingExecutor.schedule(
-                                         task, 30, TimeUnit.SECONDS);
-reportingTasks.put(reportType, scheduledTask);
+        task, 30, TimeUnit.SECONDS);
+tasks.put(reportType.toString() + counter.incrementAndGet(), scheduledTask);
 ```
 
 For scheduled tasks, `ReportingService` keeps a reference to the [ScheduledFuture](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/concurrent/ScheduledFuture.html) object, so that the user can cancel the task at any time.
