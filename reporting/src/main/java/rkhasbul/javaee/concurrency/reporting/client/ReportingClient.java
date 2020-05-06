@@ -42,6 +42,9 @@ public class ReportingClient implements Serializable {
         client = ClientBuilder.newClient();
         serviceEndpoint = "http://" + InetAddress.getLocalHost().getHostName() 
                 + "/rest/report";
+        logger.info("serviceEndpoint: " + serviceEndpoint);
+        logger.info("canonical host name: " + 
+                InetAddress.getLocalHost().getCanonicalHostName());
     }
 
     public String submit() {
