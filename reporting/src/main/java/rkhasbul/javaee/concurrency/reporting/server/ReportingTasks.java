@@ -14,7 +14,7 @@ import rkhasbul.javaee.concurrency.reporting.client.ReportType;
 
 /**
  * Storage for Report tasks
- * 
+ *
  * @author Ruslan Khasbulatov
  * @version 1.0
  */
@@ -22,10 +22,10 @@ import rkhasbul.javaee.concurrency.reporting.client.ReportType;
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class ReportingTasks {
 
-	private final Map<String, ScheduledFuture<?>> tasks;
+    private final Map<String, ScheduledFuture<?>> tasks;
 
-	private int counter;
-	
+    private int counter;
+
     public ReportingTasks() {
         this.tasks = new LinkedHashMap<>();
     }
@@ -37,29 +37,29 @@ public class ReportingTasks {
 
     @Lock(LockType.WRITE)
     public void deleteTask(String scheduledTask) {
-    	if (tasks.containsKey(scheduledTask)) {
-    		tasks.get(scheduledTask).cancel(true);
-        	tasks.remove(scheduledTask);
-    	}
+        if (tasks.containsKey(scheduledTask)) {
+            tasks.get(scheduledTask).cancel(true);
+            tasks.remove(scheduledTask);
+        }
     }
-    
+
     @Lock(LockType.READ)
     public ScheduledFuture<?> get(String key) {
         return tasks.get(key);
     }
-	
+
     @Lock(LockType.READ)
     public String getTasks() {
-    	return String.join(",", tasks.keySet());
+        return String.join(",", tasks.keySet());
     }
-    
+
     @Lock(LockType.READ)
     public Runnable getTask(final ReportType reportType) {
-		switch (reportType) {
-			case VAR: return new VarReportTask();
-			case MARGIN: return new MarginReportTask();
-			default: throw new UnsupportedOperationException();
-		}
-	}
-    
+        switch (reportType) {
+            case VAR: return new VarReportTask();
+            case MARGIN: return new MarginReportTask();
+            default: throw new UnsupportedOperationException();
+        }
+    }
+
 }

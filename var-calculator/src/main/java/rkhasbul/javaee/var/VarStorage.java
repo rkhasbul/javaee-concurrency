@@ -12,7 +12,7 @@ import javax.ejb.Singleton;
 
 /**
  * Storage for VaR tasks
- * 
+ *
  * @author Ruslan Khasbulatov
  * @version 1.0
  */
@@ -20,7 +20,7 @@ import javax.ejb.Singleton;
 @ConcurrencyManagement(ConcurrencyManagementType.CONTAINER)
 public class VarStorage {
 
-	private final Map<String, Future<Integer>> storage;
+    private final Map<String, Future<Integer>> storage;
 
     public VarStorage() {
         this.storage = new HashMap<>();
@@ -35,5 +35,5 @@ public class VarStorage {
     public Future<Integer> get(String key) {
         return storage.get(key);
     }
-	
+
 }

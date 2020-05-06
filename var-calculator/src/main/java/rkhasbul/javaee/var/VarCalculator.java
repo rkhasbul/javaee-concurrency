@@ -19,8 +19,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 /**
- * Report Generation Service 
- * 
+ * Report Generation Service
+ *
  * @author Ruslan Khasbulatov
  * @version 1.0
  */
@@ -28,49 +28,49 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Path("/{ticker}")
 public class VarCalculator {
 
-	private static final Logger logger = Logger.getLogger(VarCalculator.class.getCanonicalName());
+    private static final Logger logger = Logger.getLogger(VarCalculator.class.getCanonicalName());
 
     @Resource(lookup = "java:jboss/ee/concurrency/executor/var")
     private ManagedExecutorService varExecutor;
 
     @EJB
     private VarStorage varStorage;
-    
+
     @GET
     @Path("/submit")
     public Response submit(final @PathParam("ticker") String ticker) {
-    	logger.info(String.format("Submitting VaR calculation task for ticker '%s'...", ticker));
+        logger.info(String.format("Submitting VaR calculation task for ticker '%s'...", ticker));
         try {
             Future<Integer> submit = varExecutor.submit(new VarTask(ticker));
             varStorage.put(ticker, submit);
         } catch (RejectedExecutionException ree) {
             return Response.status(SERVICE_UNAVAILABLE)
-            		.entity(String.format("VaR calculation task for ticker '%s' not submitted. %s", ticker, ree.getMessage()))
-            		.build();
+                    .entity(String.format("VaR calculation task for ticker '%s' not submitted. %s", ticker, ree.getMessage()))
+                    .build();
         }
 
         return Response.status(OK)
-        		.entity(String.format("VaR calculation task for ticker '%s' successfully submitted.", ticker))
-        		.build();
+                .entity(String.format("VaR calculation task for ticker '%s' successfully submitted.", ticker))
+                .build();
     }
-	
+
     @GET
     public Response getResult(final @PathParam("ticker") String ticker) {
-    	logger.info(String.format("Requesting VaR result for '%s' ticker...", ticker));
-    	final Future<Integer> future = varStorage.get(ticker);
-    	ResponseBuilder responseBuilder = null;
-    	if (future != null) {
-    		try {
-    			Integer result = future.get();
-    			logger.info(String.format("VaR result: %d", result));
-    			responseBuilder = Response.status(OK).entity(result);
-    		} catch (Exception e) {
-    			responseBuilder = Response.status(SERVICE_UNAVAILABLE).entity(e.getMessage());
-    		}
-    	} else {
-    		responseBuilder = Response.status(NOT_FOUND);
-    	}
-		return responseBuilder.build();
+        logger.info(String.format("Requesting VaR result for '%s' ticker...", ticker));
+        final Future<Integer> future = varStorage.get(ticker);
+        ResponseBuilder responseBuilder = null;
+        if (future != null) {
+            try {
+                Integer result = future.get();
+                logger.info(String.format("VaR result: %d", result));
+                responseBuilder = Response.status(OK).entity(result);
+            } catch (Exception e) {
+                responseBuilder = Response.status(SERVICE_UNAVAILABLE).entity(e.getMessage());
+            }
+        } else {
+            responseBuilder = Response.status(NOT_FOUND);
+        }
+        return responseBuilder.build();
     }
-    
+
 }

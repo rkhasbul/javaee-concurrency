@@ -4,15 +4,15 @@ import java.util.logging.Logger;
 
 /**
  * Margin Report generation task
- * 
+ *
  * @author Ruslan Khasbulatov
  * @version 1.0
  */
 public class MarginReportTask implements Runnable {
-	
-	private static final Logger logger = Logger.getLogger(MarginReportTask.class.getCanonicalName());
-	
-	@Override
+
+    private static final Logger logger = Logger.getLogger(MarginReportTask.class.getCanonicalName());
+
+    @Override
     public void run() {
         try {
             logger.info("Starting Margin Report Task...");

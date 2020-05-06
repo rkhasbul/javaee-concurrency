@@ -6,21 +6,21 @@ import java.util.logging.Logger;
 
 /**
  * VaR calculation task
- * 
+ *
  * @author Ruslan Khasbulatov
  * @version 1.0
  */
 public class VarTask implements Callable<Integer> {
 
-	private static final Logger logger = Logger.getLogger(VarTask.class.getCanonicalName());
-	
-	private final String ticker;
-	
-	public VarTask(final String ticker) {
-		this.ticker = ticker;
-	}
+    private static final Logger logger = Logger.getLogger(VarTask.class.getCanonicalName());
 
-	@Override
+    private final String ticker;
+
+    public VarTask(final String ticker) {
+        this.ticker = ticker;
+    }
+
+    @Override
     public Integer call() {
         try {
             logger.info(String.format("Calculating VaR for ticker '%s'...", ticker));
