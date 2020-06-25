@@ -11,8 +11,8 @@ The project demonstrates a scenario where a RESTful web service, exposed as a pu
 
 The RESTful service exposes two methods:
 
-* /submit: `GET` method that receives a `ticker` path parameter and submits task for execution
-* /getResult: `GET` method that receives a `ticker` path parameter and search for result in the `varStorage`
+* /rest/{ticker}/submit: `GET` method that receives a `ticker` path parameter and submits task for execution
+* /rest/{ticker}: `GET` method that receives a `ticker` path parameter and search for result in the `varStorage`
 
 `varStorage` is a [Singleton](https://javaee.github.io/javaee-spec/javadocs/javax/ejb/Singleton.html) that contains Java [HashMap](https://docs.oracle.com/en/java/javase/14/docs/api/java.base/java/util/HashMap.html) for storing var calculation tasks. It also uses [ConcurrencyManagement](https://javaee.github.io/javaee-spec/javadocs/javax/ejb/ConcurrencyManagement.html) and [Lock](https://javaee.github.io/javaee-spec/javadocs/javax/ejb/Lock.html) annotations for concurrency access.
 
